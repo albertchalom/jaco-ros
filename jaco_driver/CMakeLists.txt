@@ -19,9 +19,6 @@ find_package(catkin REQUIRED dynamic_reconfigure COMPONENTS
   std_msgs
   tf
 )
-generate_dynamic_reconfigure_options(
-  #cfg/JacoPositionConfig.cfg
-)
 
 link_directories(${PROJECT_SOURCE_DIR}/lib/${CMAKE_LIBRARY_ARCHITECTURE})
 
