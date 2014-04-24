@@ -24,6 +24,9 @@ JacoAPI::JacoAPI(void) {
 	GetCodeVersion = (int (*)(
 			std::vector<int> &))dlsym(USBLib, "GetCodeVersion");
 
+	GetAPIVersion = (int (*)(
+			std::vector<int> &))dlsym(USBLib, "GetAPIVersion");
+
 	GetCartesianPosition = (int (*)(
 			CartesianPosition &))dlsym(USBLib, "GetCartesianPosition");
 
@@ -38,8 +41,6 @@ JacoAPI::JacoAPI(void) {
 
 	GetAngularCurrent = (int (*)(
 			AngularPosition &))dlsym(USBLib, "GetAngularCurrent");
-
-	GetControlOperator = (int (*)(int &))dlsym(USBLib, "GetControlOperator");
 
 	GetActualTrajectoryInfo = (int (*)(
 			TrajectoryPoint &))dlsym(USBLib, "GetActualTrajectoryInfo");
@@ -84,6 +85,11 @@ JacoAPI::JacoAPI(void) {
 
 	SetActuatorPID = (int (*)(unsigned int, float, float,
 			float))dlsym(USBLib, "SetActuatorPID");
+
+
+	MoveHome = (int (*)())dlsym(USBLib, "MoveHome");
+
+	InitFingers = (int (*)())dlsym(USBLib, "InitFingers");
 }
 
 }

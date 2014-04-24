@@ -28,12 +28,12 @@ public:
 	int (*InitAPI)(void);
 	int (*CloseAPI)(void);
 	int (*GetCodeVersion)(std::vector<int> &);
+	int (*GetAPIVersion)(std::vector<int> &);
 	int (*GetCartesianPosition)(CartesianPosition &);
 	int (*GetAngularPosition)(AngularPosition &);
 	int (*GetCartesianForce)(CartesianPosition &);
 	int (*GetAngularForce)(AngularPosition &);
 	int (*GetAngularCurrent)(AngularPosition &);
-	int (*GetControlOperator)(int &);
 	int (*GetActualTrajectoryInfo)(TrajectoryPoint &);
 	int (*GetGlobalTrajectoryInfo)(TrajectoryFIFO &);
 	int (*GetSensorsInfo)(SensorsInfo &);
@@ -51,6 +51,9 @@ public:
 	int (*EraseAllTrajectories)();
 	int (*GetPositionCurrentActuators)(std::vector<float> &);
 	int (*SetActuatorPID)(unsigned int, float, float, float);
+
+	int (*MoveHome)();
+	int (*InitFingers)();
 
 	};}
 
