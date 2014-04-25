@@ -54,6 +54,7 @@ public:
 
 	int (*MoveHome)();
 	int (*InitFingers)();
+	int (*GetQuickStatus)(QuickStatus &);
 
 	};}
 

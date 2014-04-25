@@ -90,6 +90,9 @@ JacoAPI::JacoAPI(void) {
 	MoveHome = (int (*)())dlsym(USBLib, "MoveHome");
 
 	InitFingers = (int (*)())dlsym(USBLib, "InitFingers");
+
+	GetQuickStatus = (int (*)(
+			QuickStatus &))dlsym(USBLib, "GetQuickStatus");
 }
 
 }

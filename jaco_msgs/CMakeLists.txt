@@ -49,6 +49,7 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    ArmJointAngles.action
    ArmPose.action
+   ArmPoseTrajectory.action
    SetFingersPosition.action
  )
 

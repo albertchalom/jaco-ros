@@ -45,7 +45,7 @@
 
 #include <ros/ros.h>
 #include "jaco_driver/jaco_comm.h"
-
+#include <iostream>
 #define PI 3.14159265358
 
 namespace jaco
@@ -218,6 +218,19 @@ void JacoComm::SetPosition(JacoPose &position, int timeout, bool push)
 
 	API->SendBasicTrajectory(Jaco_Position);
 }
+
+void JacoComm::GetTrajectorySize(int &size)
+{
+	boost::recursive_mutex::scoped_lock lock(api_mutex);
+	TrajectoryFIFO Trajectory_Info;
+
+	memset(&Trajectory_Info, 0, sizeof(Trajectory_Info)); //zero structure
+
+	API->GetGlobalTrajectoryInfo(Trajectory_Info);
+
+	size = Trajectory_Info.TrajectoryCount;
+}
+
 
 /*!
  * \brief Sets the finger positions
