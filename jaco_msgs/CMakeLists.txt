@@ -34,6 +34,7 @@ find_package(catkin REQUIRED COMPONENTS
    FingerPosition.msg
    JointAngles.msg
    JointVelocity.msg
+   TrajectoryPoint.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -49,7 +50,7 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    ArmJointAngles.action
    ArmPose.action
-   ArmPoseTrajectory.action
+   Trajectory.action
    SetFingersPosition.action
  )
 

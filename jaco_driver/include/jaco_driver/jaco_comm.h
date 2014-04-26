@@ -64,6 +64,7 @@ class JacoComm
 	void InitializeFingers(void);
 	void SetAngles(JacoAngles &angles, int timeout = 0, bool push = true);
 	void SetPosition(JacoPose &position, int timeout = 0, bool push = true);
+	void SendTrajectory(JacoTrajectory &trajectory, bool push = true);
 	void GetTrajectorySize(int &size);
 	void SetFingers(FingerAngles &fingers, int timeout = 0, bool push = true);
 	void SetVelocities(AngularInfo joint_vel);

@@ -139,6 +139,7 @@ void JacoComm::HomeArm(void)
 		return;
 	}
 
+	API->StartControlAPI();
         API->MoveHome();
 }
 
@@ -149,6 +150,7 @@ void JacoComm::HomeArm(void)
  */
 void JacoComm::InitializeFingers(void)
 {
+	API->StartControlAPI();
 	API->InitFingers();
 }
 
@@ -217,6 +219,28 @@ void JacoComm::SetPosition(JacoPose &position, int timeout, bool push)
 	//Jaco_Position.Position.CartesianPosition.ThetaZ += 0.0001; // A workaround for a bug in the Kinova API
 
 	API->SendBasicTrajectory(Jaco_Position);
+}
+
+
+void JacoComm::SendTrajectory(JacoTrajectory &trajectory, bool push)
+{
+	boost::recursive_mutex::scoped_lock lock(api_mutex);
+	if (Stopped())
+		return;
+
+	if (push == true)
+	{
+		API->EraseAllTrajectories();
+		API->StopControlAPI();
+	}
+
+	API->StartControlAPI();
+	API->SetCartesianControl();
+
+	TrajectoryPoint point;
+	point.Position = trajectory;
+	point.LimitationsActive = 0;
+	API->SendAdvanceTrajectory(point);
 }
 
 void JacoComm::GetTrajectorySize(int &size)

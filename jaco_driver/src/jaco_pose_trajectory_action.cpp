@@ -53,7 +53,7 @@ namespace jaco
 
 JacoPoseTrajectoryActionServer::JacoPoseTrajectoryActionServer(JacoComm &arm_comm, ros::NodeHandle &n) : 
     arm(arm_comm), 
-    as_(n, "arm_pose_trajectory", boost::bind(&JacoPoseTrajectoryActionServer::ActionCallback, this, _1), false)
+    as_(n, "arm_trajectory", boost::bind(&JacoPoseTrajectoryActionServer::ActionCallback, this, _1), false)
 {
     as_.start();
 }
@@ -63,22 +63,22 @@ JacoPoseTrajectoryActionServer::~JacoPoseTrajectoryActionServer()
 
 }
 
-void JacoPoseTrajectoryActionServer::ActionCallback(const jaco_msgs::ArmPoseTrajectoryGoalConstPtr &goal)
+void JacoPoseTrajectoryActionServer::ActionCallback(const jaco_msgs::TrajectoryGoalConstPtr &goal)
 {
-	jaco_msgs::ArmPoseTrajectoryFeedback feedback;
-	jaco_msgs::ArmPoseTrajectoryResult result;
+	ROS_INFO("Got a trajectory goal for the arm");
+
+	jaco_msgs::TrajectoryFeedback feedback;
+	jaco_msgs::TrajectoryResult result;
 	feedback.pose.header.frame_id = "/jaco_api_origin";
 	result.pose.header.frame_id = "/jaco_api_origin";
 
-	ROS_INFO("Got a cartesian trajectory goal for the arm");
 
 
-
-	JacoPose cur_position;		//holds the current position of the arm
-	geometry_msgs::PoseStamped local_pose;
 
 	if (arm.Stopped())
 	{
+		JacoPose cur_position;		//holds the current position of the arm
+		geometry_msgs::PoseStamped local_pose;
 		arm.GetPosition(cur_position);
 		local_pose.pose = cur_position.Pose();
 
@@ -88,29 +88,35 @@ void JacoPoseTrajectoryActionServer::ActionCallback(const jaco_msgs::ArmPoseTraj
 	}
 
 	bool is_first = true;
-        BOOST_FOREACH(geometry_msgs::PoseStamped pose, goal->trajectory){
-		if (ros::ok()
-				&& !listener.canTransform("/jaco_api_origin", pose.header.frame_id,
-						pose.header.stamp))
-		{
-			ROS_ERROR("Could not get transfrom from /jaco_api_origin to %s, aborting cartesian movement", pose.header.frame_id.c_str());
-			return;
+        BOOST_FOREACH(jaco_msgs::TrajectoryPoint point, goal->trajectory){
+		jaco_msgs::TrajectoryPoint local_point;
+		local_point = point;
+		if(!point.position.header.frame_id.empty()){
+			if (ros::ok()
+					&& !listener.canTransform("/jaco_api_origin", point.position.header.frame_id,
+							point.position.header.stamp))
+			{
+				ROS_ERROR("Could not get transfrom from /jaco_api_origin to %s, aborting cartesian movement", point.position.header.frame_id.c_str());
+				return;
+			}
+			local_point.position.header.frame_id = "/jaco_api_origin";
+			listener.transformPose(local_point.position.header.frame_id, point.position, local_point.position);
 		}
-		local_pose.header.frame_id = "/jaco_api_origin";
-		listener.transformPose(local_pose.header.frame_id, pose, local_pose);
 
-		JacoPose target(local_pose.pose);
-		arm.SetPosition(target, 0, is_first);
+		JacoTrajectory target(local_point);
+		arm.SendTrajectory(target, is_first);
 		is_first = false;
 	}
 
 	ros::Rate r(10);
  
-	const float tolerance = 0.05; 	//dead zone for position
 
 	//while we have not timed out
 	while (true)
 	{
+		JacoPose cur_position;		//holds the current position of the arm
+		geometry_msgs::PoseStamped local_pose;
+		local_pose.header.frame_id = "/jaco_api_origin";
 		ros::spinOnce();
 		if (as_.isPreemptRequested() || !ros::ok())
 		{
@@ -119,6 +125,8 @@ void JacoPoseTrajectoryActionServer::ActionCallback(const jaco_msgs::ArmPoseTraj
 			as_.setPreempted();
 			return;
 		}
+		FingerAngles cur_fingers;
+		arm.GetFingers(cur_fingers);
 
 		arm.GetPosition(cur_position);
 		local_pose.pose = cur_position.Pose();
@@ -138,7 +146,7 @@ void JacoPoseTrajectoryActionServer::ActionCallback(const jaco_msgs::ArmPoseTraj
 		arm.GetTrajectorySize(trajectory_size);
 		if (trajectory_size == 0)
 		{
-			ROS_INFO("Cartesian Control Complete.");
+			ROS_INFO("Trajectory Control Complete.");
 
 			result.pose = feedback.pose;
 			as_.setSucceeded(result);

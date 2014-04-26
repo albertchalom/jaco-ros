@@ -1,0 +1,8 @@
+# Goal
+jaco_msgs/TrajectoryPoint[] trajectory
+---
+# Result
+geometry_msgs/PoseStamped pose
+---
+# Feedback message
+geometry_msgs/PoseStamped pose

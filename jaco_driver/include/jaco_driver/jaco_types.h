@@ -50,6 +50,7 @@
 #include <geometry_msgs/Pose.h>
 #include <jaco_msgs/JointAngles.h>
 #include <jaco_msgs/FingerPosition.h>
+#include <jaco_msgs/TrajectoryPoint.h>
 
 namespace jaco
 {
@@ -92,6 +93,13 @@ class FingerAngles : public FingersPosition
 
 	jaco_msgs::FingerPosition Fingers();
 	bool Compare(const FingerAngles &, float) const;
+};
+
+class JacoTrajectory : public UserPosition
+{
+	public:
+	JacoTrajectory() {}
+	JacoTrajectory(const jaco_msgs::TrajectoryPoint &);
 };
 
 

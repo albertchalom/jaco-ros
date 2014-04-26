@@ -218,4 +218,33 @@ bool FingerAngles::Compare(const FingerAngles &other, float tolerance) const
 	return status;
 }
 
+JacoTrajectory::JacoTrajectory(const jaco_msgs::TrajectoryPoint & trajectory)
+{
+  if(trajectory.position_type == jaco_msgs::TrajectoryPoint::POSITION_TYPE_NO_MOVE)
+    Type = NOMOVEMENT_POSITION;
+  else if(trajectory.position_type == jaco_msgs::TrajectoryPoint::POSITION_TYPE_CARTESIAN_POSITION)
+    Type = CARTESIAN_POSITION;
+  else if(trajectory.position_type == jaco_msgs::TrajectoryPoint::POSITION_TYPE_TIME_DELAY)
+    Type = TIME_DELAY;
+  else
+    Type = NOMOVEMENT_POSITION;
+
+  Delay = trajectory.delay;
+
+  JacoPose position(trajectory.position.pose);
+  CartesianPosition = position;
+
+  if(trajectory.hand_mode == jaco_msgs::TrajectoryPoint::HAND_MODE_NO_MOVE)
+    HandMode = HAND_NOMOVEMENT;
+  else if(trajectory.hand_mode == jaco_msgs::TrajectoryPoint::HAND_MODE_POSITION)
+    HandMode = POSITION_MODE;
+  else
+    HandMode = HAND_NOMOVEMENT;
+
+  FingerAngles fingers(trajectory.fingers);
+  Fingers = fingers;
+}
+
+
+
 }
