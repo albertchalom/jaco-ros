@@ -275,6 +275,8 @@ void JacoArm::BroadCastPosition(void)
 
 	arm.GetPosition(pose);
 	current_position.pose = pose.Pose();
+	current_position.header.stamp = ros::Time::now();
+	current_position.header.frame_id = "/jaco_api_origin";
 
 	ToolPosition_pub.publish(current_position);
 }
