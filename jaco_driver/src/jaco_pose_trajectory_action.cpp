@@ -83,6 +83,7 @@ void JacoPoseTrajectoryActionServer::ActionCallback(const jaco_msgs::TrajectoryG
 		local_pose.pose = cur_position.Pose();
 
 		listener.transformPose(result.pose.header.frame_id, local_pose, result.pose);
+		ROS_WARN("Arm stopped before when trajectory started");
 		as_.setAborted(result);
 		return;
 	}
@@ -118,11 +119,20 @@ void JacoPoseTrajectoryActionServer::ActionCallback(const jaco_msgs::TrajectoryG
 		geometry_msgs::PoseStamped local_pose;
 		local_pose.header.frame_id = "/jaco_api_origin";
 		ros::spinOnce();
-		if (as_.isPreemptRequested() || !ros::ok())
+		if (as_.isPreemptRequested())
 		{
+			ROS_WARN("Arm trajectory preempted");
 			arm.Stop();
 			arm.Start();
 			as_.setPreempted();
+			return;
+		}
+		if (!ros::ok())
+		{
+			ROS_WARN("Arm trajectory aborted because ros not ok");
+			arm.Stop();
+			arm.Start();
+			as_.setAborted();
 			return;
 		}
 		FingerAngles cur_fingers;
@@ -136,6 +146,7 @@ void JacoPoseTrajectoryActionServer::ActionCallback(const jaco_msgs::TrajectoryG
 		if (arm.Stopped())
 		{
 			result.pose = feedback.pose;
+			ROS_WARN("Arm stopped during trajectory");
 			as_.setAborted(result);
 			return;
 		}
