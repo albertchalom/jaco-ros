@@ -19,6 +19,7 @@
 
 
   <property name="J_PI" value="3.1415926535897931" />
+  <property name="J_LIM" value="${2*J_PI}" />
   <property name="link_base" value="jaco_link_base" />
   <property name="link_1" value="jaco_link_1" />
   <property name="link_2" value="jaco_link_2" />
@@ -134,19 +135,19 @@
   
 
    <xacro:jaco_link link_name="${link_base}"/>
-   <xacro:jaco_joint joint_name="${joint_base}" type="fixed" parent="${parent}" child="${link_base}" joint_axis_xyz="${joint_base_axis_xyz}" joint_origin_xyz="${joint_base_origin_xyz}" joint_origin_rpy="${joint_base_origin_rpy}" lower_limit="-30" upper_limit="30"/>
+   <xacro:jaco_joint joint_name="${joint_base}" type="fixed" parent="${parent}" child="${link_base}" joint_axis_xyz="${joint_base_axis_xyz}" joint_origin_xyz="${joint_base_origin_xyz}" joint_origin_rpy="${joint_base_origin_rpy}" lower_limit="-${J_LIM}" upper_limit="${J_LIM}"/>
    <xacro:jaco_link link_name="${link_1}"/>
-   <xacro:jaco_joint joint_name="${joint_1}" type="revolute" parent="${link_base}" child="${link_1}" joint_axis_xyz="${joint_1_axis_xyz}" joint_origin_xyz="${joint_1_origin_xyz}" joint_origin_rpy="${joint_1_origin_rpy}" lower_limit="-30" upper_limit="30"/>
+   <xacro:jaco_joint joint_name="${joint_1}" type="revolute" parent="${link_base}" child="${link_1}" joint_axis_xyz="${joint_1_axis_xyz}" joint_origin_xyz="${joint_1_origin_xyz}" joint_origin_rpy="${joint_1_origin_rpy}" lower_limit="-${J_LIM}" upper_limit="${J_LIM}"/>
    <xacro:jaco_link link_name="${link_2}"/>
-   <xacro:jaco_joint joint_name="${joint_2}" type="revolute" parent="${link_1}" child="${link_2}" joint_axis_xyz="${joint_2_axis_xyz}" joint_origin_xyz="${joint_2_origin_xyz}" joint_origin_rpy="${joint_2_origin_rpy}" lower_limit="-30" upper_limit="30"/>
+   <xacro:jaco_joint joint_name="${joint_2}" type="revolute" parent="${link_1}" child="${link_2}" joint_axis_xyz="${joint_2_axis_xyz}" joint_origin_xyz="${joint_2_origin_xyz}" joint_origin_rpy="${joint_2_origin_rpy}" lower_limit="0" upper_limit="${J_LIM}"/>
    <xacro:jaco_link link_name="${link_3}"/>
-   <xacro:jaco_joint joint_name="${joint_3}" type="revolute" parent="${link_2}" child="${link_3}" joint_axis_xyz="${joint_3_axis_xyz}" joint_origin_xyz="${joint_3_origin_xyz}" joint_origin_rpy="${joint_3_origin_rpy}" lower_limit="-30" upper_limit="30"/>
+   <xacro:jaco_joint joint_name="${joint_3}" type="revolute" parent="${link_2}" child="${link_3}" joint_axis_xyz="${joint_3_axis_xyz}" joint_origin_xyz="${joint_3_origin_xyz}" joint_origin_rpy="${joint_3_origin_rpy}" lower_limit="0" upper_limit="${J_LIM}"/>
    <xacro:jaco_link link_name="${link_4}"/>
-   <xacro:jaco_joint joint_name="${joint_4}" type="revolute" parent="${link_3}" child="${link_4}" joint_axis_xyz="${joint_4_axis_xyz}" joint_origin_xyz="${joint_4_origin_xyz}" joint_origin_rpy="${joint_4_origin_rpy}" lower_limit="-30" upper_limit="30"/>
+   <xacro:jaco_joint joint_name="${joint_4}" type="revolute" parent="${link_3}" child="${link_4}" joint_axis_xyz="${joint_4_axis_xyz}" joint_origin_xyz="${joint_4_origin_xyz}" joint_origin_rpy="${joint_4_origin_rpy}" lower_limit="-${J_LIM}" upper_limit="${J_LIM}"/>
    <xacro:jaco_link link_name="${link_5}"/>
-   <xacro:jaco_joint joint_name="${joint_5}" type="revolute" parent="${link_4}" child="${link_5}" joint_axis_xyz="${joint_5_axis_xyz}" joint_origin_xyz="${joint_5_origin_xyz}" joint_origin_rpy="${joint_5_origin_rpy}" lower_limit="-30" upper_limit="30"/>
+   <xacro:jaco_joint joint_name="${joint_5}" type="revolute" parent="${link_4}" child="${link_5}" joint_axis_xyz="${joint_5_axis_xyz}" joint_origin_xyz="${joint_5_origin_xyz}" joint_origin_rpy="${joint_5_origin_rpy}" lower_limit="-${J_LIM}" upper_limit="${J_LIM}"/>
    <xacro:jaco_link link_name="${link_hand}"/>
-   <xacro:jaco_joint joint_name="${joint_6}" type="revolute" parent="${link_5}" child="${link_hand}" joint_axis_xyz="${joint_6_axis_xyz}" joint_origin_xyz="${joint_6_origin_xyz}" joint_origin_rpy="${joint_6_origin_rpy}" lower_limit="-30" upper_limit="30"/>
+   <xacro:jaco_joint joint_name="${joint_6}" type="revolute" parent="${link_5}" child="${link_hand}" joint_axis_xyz="${joint_6_axis_xyz}" joint_origin_xyz="${joint_6_origin_xyz}" joint_origin_rpy="${joint_6_origin_rpy}" lower_limit="-${J_LIM}" upper_limit="${J_LIM}"/>
 
    <xacro:jaco_link link_name="${link_finger_1}"/>
    <xacro:jaco_finger_joint joint_name="${joint_finger_1}" type="revolute" parent="${link_hand}" child="${link_finger_1}" joint_axis_xyz="${joint_finger_1_axis_xyz}" joint_origin_xyz="${joint_finger_1_origin_xyz}" joint_origin_rpy="${joint_finger_1_origin_rpy}" lower_limit="${joint_finger_1_lower_limit}" upper_limit="${joint_finger_1_upper_limit}"/>
