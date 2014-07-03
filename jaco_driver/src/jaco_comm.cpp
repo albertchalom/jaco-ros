@@ -47,6 +47,7 @@
 #include "jaco_driver/jaco_comm.h"
 #include <string>
 #include <vector>
+#include <boost/foreach.hpp>
 
 
 namespace jaco
@@ -296,7 +297,23 @@ void JacoComm::setJointAngles(const JacoAngles &angles, int timeout, bool push)
         throw JacoCommException("Could not send adanced joint angle trajectory", result);
     }
 }
-
+/*!
+ * \brief Sends a joint angle command to the Jaco arm.
+ *
+ * Waits until the arm has stopped moving before releasing control of the API.
+ */
+bool JacoComm::sendJointAngleTrajectory(const std::vector<JacoAngles> & points)
+{
+    boost::recursive_mutex::scoped_lock lock(api_mutex);
+    //Clear any running trajectories
+    result = jaco_api_.eraseAllTrajectories();
+    BOOST_FOREACH(JacoAngles angles, points)
+    {
+        setJointAngles(angles, 0, false);
+    }
+    //at this point we finished the for each loop and added every point, so we can safely return true
+    return true;
+}
 
 /*!
  * \brief Sends a cartesian coordinate trajectory to the Jaco arm.

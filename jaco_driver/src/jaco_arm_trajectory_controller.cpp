@@ -64,71 +64,76 @@ namespace jaco_arm{
     return upper_desired;
   }
   
-  void JacoArmTrajectoryController::execute_trajectory(const control_msgs::FollowJointTrajectoryGoalConstPtr &goal){
-    {
+  void JacoArmTrajectoryController::execute_trajectory(const control_msgs::FollowJointTrajectoryGoalConstPtr &goal)
+  {
       control_msgs::FollowJointTrajectoryFeedback feedback;
       control_msgs::FollowJointTrajectoryResult result;
       JacoAngles current_joint_angles;
       ros::Time current_time = ros::Time::now();
-      
-      
+
+      std::vector<JacoAngles> jacoTrajectory;
       try
-	{
+      {
           arm_comm_.getJointAngles(current_joint_angles);
-	  
+
           if (arm_comm_.isStopped())
-	    {
+          {
               ROS_ERROR("Could not complete joint angle action because the arm is 'stopped'.");
               result.error_code = control_msgs::FollowJointTrajectoryResult::INVALID_GOAL;
               trajectory_server_.setAborted(result);
               return;
-	    }
-	}
-      
-      
+          }
+      }
+
+
       last_nonstall_time_ = current_time;
       last_nonstall_angles_ = current_joint_angles;
-      
-      
+
+
       double previous_cmd[num_jaco_joints];
       for(int i = 0; i<num_jaco_joints; ++i)
-        previous_cmd[i] = joint_pos[i];
-      
-      BOOST_FOREACH(trajectory_msgs::JointTrajectoryPoint point, goal->trajectory.points){
-	ROS_INFO("Trajectory Point");
-	double joint_cmd[num_jaco_joints];
-	
-	
-	//Transform the joint trajectory point a jaco_angle point by iterating over the indices of the entries in the
-	//joint trajectory point and looking up the joint name in the internal joint_names list to find the index
-	for(int trajectory_index = 0; trajectory_index<goal->trajectory.joint_names.size(); ++trajectory_index){
-	  
-	  std::string joint_name = goal->trajectory.joint_names[trajectory_index]; // The name of the current joint in the trajectory point
-	  int joint_index = std::distance(joint_names.begin(), std::find(joint_names.begin(), joint_names.end(), joint_name)); // Get the index of that joint name in the internal list
-	  
-	  //If the joint name was found, pack the joint position from the trajectory point into a temporary vector in expected order for the jaco
-	  if(joint_index >=0 && joint_index < num_jaco_joints){
-	    ROS_INFO("%s: (%d -> %d) = %f", joint_name.c_str(), trajectory_index, joint_index, point.positions[trajectory_index]);
-	    joint_cmd[joint_index] = nearest_equivelent(point.positions[trajectory_index], previous_cmd[joint_index]);
-	  }
-	}//for
-	
-	//    for(int i = 0; i<num_jaco_joints; ++i)
-	//      previous_cmd[i] = joint_pos[i];
+          previous_cmd[i] = joint_pos[i];
 
-	jaco_msgs::JacoAngles jAnglesMsg;
-	jAngles.Angle_J1 = joint_cmd[0];
-	jAngles.Angle_J2 = joint_cmd[1];
-	jAngles.Angle_J3 = joint_cmd[2];
-	jAngles.Angle_J4 = joint_cmd[3];
-	jAngles.Angle_J5 = joint_cmd[4];
-	jAngles.Angle_J6 = joint_cmd[5];
-	
-	JacoAngles target(jAnglesMsg);
-	arm_comm_.setJointAngles(target);
-	
+      BOOST_FOREACH(trajectory_msgs::JointTrajectoryPoint point, goal->trajectory.points)
+      {
+          ROS_INFO("Trajectory Point");
+          double joint_cmd[num_jaco_joints];
+
+
+          //Transform the joint trajectory point a jaco_angle point by iterating over the indices of the entries in the
+          //joint trajectory point and looking up the joint name in the internal joint_names list to find the index
+          for(int trajectory_index = 0; trajectory_index<goal->trajectory.joint_names.size(); ++trajectory_index){
+
+              std::string joint_name = goal->trajectory.joint_names[trajectory_index]; // The name of the current joint in the trajectory point
+              int joint_index = std::distance(joint_names.begin(), std::find(joint_names.begin(), joint_names.end(), joint_name)); // Get the index of that joint name in the internal list
+
+              //If the joint name was found, pack the joint position from the trajectory point into a temporary vector in expected order for the jaco
+              if(joint_index >=0 && joint_index < num_jaco_joints){
+                  ROS_INFO("%s: (%d -> %d) = %f", joint_name.c_str(), trajectory_index, joint_index, point.positions[trajectory_index]);
+                  joint_cmd[joint_index] = nearest_equivelent(point.positions[trajectory_index], previous_cmd[joint_index]);
+              }
+          }//for
+
+          //    for(int i = 0; i<num_jaco_joints; ++i)
+          //      previous_cmd[i] = joint_pos[i];
+
+          jaco_msgs::JacoAngles jAnglesMsg;
+          jAngles.Angle_J1 = joint_cmd[0];
+          jAngles.Angle_J2 = joint_cmd[1];
+          jAngles.Angle_J3 = joint_cmd[2];
+          jAngles.Angle_J4 = joint_cmd[3];
+          jAngles.Angle_J5 = joint_cmd[4];
+          jAngles.Angle_J6 = joint_cmd[5];
+
+          JacoAngles target(jAnglesMsg);
+          jacoTrajectory.push_back(target);
       }
-    }
+
+      //Send the trajectory to the jaco arm
+      arm_comm_.setJointAngles(jacoTrajectory);
+
+
+    //Monitor the arm to send feedback and results.
     ros::Rate rate(10);
     int trajectory_size;
     while(trajectory_size > 0){

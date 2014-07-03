@@ -88,7 +88,8 @@ class JacoComm
     bool isStopped();
     int numFingers();
 
- private:
+    bool sendJointAngleTrajectory(const std::vector<JacoAngles> &points);
+private:
     boost::recursive_mutex& api_mutex_;
     jaco::JacoAPI jaco_api_;
     bool is_software_stop_;
