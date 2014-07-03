@@ -53,6 +53,8 @@ add_executable(jaco_arm_driver
   src/jaco_angles_action.cpp
   src/jaco_fingers_action.cpp
   src/jaco_types.cpp
+  src/jaco_arm_trajectory_controller.cpp
+  include/jaco_driver/jaco_arm_trajectory_controller.h
   include/jaco_driver/jaco_angles_action.h
   include/jaco_driver/jaco_api.h
   include/jaco_driver/jaco_arm.h
