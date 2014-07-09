@@ -15,7 +15,7 @@
 #define DEG_TO_RAD (M_PI/180)
 #define RAD_TO_DEG (180/M_PI)
 
-namespace jaco_arm{
+namespace jaco{
 
 class JacoArmTrajectoryController
 {
@@ -31,7 +31,7 @@ private:
   boost::recursive_mutex api_mutex;
 
 public:
-  JacoArmTrajectoryController(ros::NodeHandle nh, ros::NodeHandle pnh);
+  JacoArmTrajectoryController(JacoComm &arm_comm, ros::NodeHandle nh, ros::NodeHandle pnh);
   virtual ~JacoArmTrajectoryController();
   void execute_trajectory(const control_msgs::FollowJointTrajectoryGoalConstPtr &goal);
   void execute_gripper(const control_msgs::GripperCommandGoalConstPtr &goal);
@@ -42,10 +42,18 @@ private:
   std::vector<double> joint_pos;
   std::vector<double> joint_vel;
   std::vector<double> joint_eff;
-  unsigned int num_jaco_finger_joints_;
-  unsigned int num_jaco_joints_;
+  int num_jaco_finger_joints_;
+  int num_jaco_joints_;
   unsigned int num_joints_;
   double tolerance_;
+  double stall_interval_seconds_;
+  double stall_threshold_;
+  double rate_hz_;
+  ros::Time last_nonstall_time_;
+  JacoAngles last_nonstall_angles_;
+
+
+
 };
 
 }

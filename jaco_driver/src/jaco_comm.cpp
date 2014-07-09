@@ -62,7 +62,7 @@ JacoComm::JacoComm(const ros::NodeHandle& node_handle,
 
     // Get the serial number parameter for the arm we wish to connec to
     std::string serial_number = "";
-    node_handle.getParam("serial_number", serial_number);
+    //node_handle.getParam("serial_number", serial_number);
 
     std::vector<int> api_version;
     int result = jaco_api_.getAPIVersion(api_version);
@@ -304,9 +304,9 @@ void JacoComm::setJointAngles(const JacoAngles &angles, int timeout, bool push)
  */
 bool JacoComm::sendJointAngleTrajectory(const std::vector<JacoAngles> & points)
 {
-    boost::recursive_mutex::scoped_lock lock(api_mutex);
+    boost::recursive_mutex::scoped_lock lock(this->api_mutex_);
     //Clear any running trajectories
-    result = jaco_api_.eraseAllTrajectories();
+    int result = jaco_api_.eraseAllTrajectories();
     BOOST_FOREACH(JacoAngles angles, points)
     {
         setJointAngles(angles, 0, false);
