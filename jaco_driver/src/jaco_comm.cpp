@@ -184,11 +184,11 @@ bool JacoComm::isHomed(void)
 
     if (quick_status.RetractType == 1)
     {
-        return 1;
+        return true;
     }
     else
     {
-        return 0;
+        return false;
     }
 }
 
@@ -294,7 +294,7 @@ void JacoComm::setJointAngles(const JacoAngles &angles, int timeout, bool push)
     result = jaco_api_.sendAdvanceTrajectory(jaco_position);
     if (result != NO_ERROR_KINOVA)
     {
-        throw JacoCommException("Could not send adanced joint angle trajectory", result);
+        throw JacoCommException("Could not send advanced joint angle trajectory", result);
     }
 }
 /*!
@@ -419,28 +419,18 @@ void JacoComm::setFingerPositions(const FingerAngles &fingers, int timeout, bool
     // These values will not be used but are initialized anyway.
     JacoAngles angles;
     getJointAngles(angles);
-    jaco_position.Position.Actuators.Actuator1 = angles.Actuator1;
-    jaco_position.Position.Actuators.Actuator2 = angles.Actuator2;
-    jaco_position.Position.Actuators.Actuator3 = angles.Actuator3;
-    jaco_position.Position.Actuators.Actuator4 = angles.Actuator4;
-    jaco_position.Position.Actuators.Actuator5 = angles.Actuator5;
-    jaco_position.Position.Actuators.Actuator6 = angles.Actuator6;
+    jaco_position.Position.Actuators = angles;
 
     // When loading a cartesian position for the fingers, values are required for the arm joints
     // as well or the arm goes nuts.  Grab the current position and feed it back to the arm.
     JacoPose pose;
     getCartesianPosition(pose);
-    jaco_position.Position.CartesianPosition.X = pose.X;
-    jaco_position.Position.CartesianPosition.Y = pose.Y;
-    jaco_position.Position.CartesianPosition.Z = pose.Z;
-    jaco_position.Position.CartesianPosition.ThetaX = pose.ThetaX;
-    jaco_position.Position.CartesianPosition.ThetaY = pose.ThetaY;
-    jaco_position.Position.CartesianPosition.ThetaZ = pose.ThetaZ;
+    jaco_position.Position.CartesianPosition = pose;
 
     result = jaco_api_.sendAdvanceTrajectory(jaco_position);
     if (result != NO_ERROR_KINOVA)
     {
-        throw JacoCommException("Could not send adanced finger trajectory", result);
+        throw JacoCommException("Could not send advanced finger trajectory", result);
     }
 }
 
@@ -472,7 +462,7 @@ void JacoComm::setJointVelocities(const AngularInfo &joint_vel)
     int result = jaco_api_.sendAdvanceTrajectory(jaco_velocity);
     if (result != NO_ERROR_KINOVA)
     {
-        throw JacoCommException("Could not send adanced joint velocity trajectory", result);
+        throw JacoCommException("Could not send advanced joint velocity trajectory", result);
     }
 }
 
@@ -505,7 +495,7 @@ void JacoComm::setCartesianVelocities(const CartesianInfo &velocities)
     int result = jaco_api_.sendAdvanceTrajectory(jaco_velocity);
     if (result != NO_ERROR_KINOVA)
     {
-        throw JacoCommException("Could not send adanced Cartesian velocity trajectory", result);
+        throw JacoCommException("Could not send advanced Cartesian velocity trajectory", result);
     }
 }
 

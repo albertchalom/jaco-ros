@@ -6,6 +6,8 @@ import rospy
 
 import sys
 
+import math
+
 import actionlib
 import jaco_msgs.msg
 
@@ -27,6 +29,8 @@ def joint_angle_client(angle_set):
     goal.angles.joint4 = angle_set[3]
     goal.angles.joint5 = angle_set[4]
     goal.angles.joint6 = angle_set[5]
+
+    print('goal: {}'.format(goal))
 
     client.send_goal(goal)
     if client.wait_for_result(rospy.Duration(20.0)):
@@ -56,7 +60,7 @@ if __name__ == '__main__':
             angles = goal_generators.joint_angles_from_file(str(sys.argv[2]))
         else:
             print('Using the specified joint angles:')
-            raw_angles = [float(n) for n in sys.argv[3:]]
+            raw_angles = [float(n) for n in sys.argv[2:]]
             angles = [raw_angles]
 
         for angle_set in angles:
