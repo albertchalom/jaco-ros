@@ -1,3 +1,4 @@
+
 /**
  *      _____
  *     /  _  \
@@ -81,7 +82,7 @@ void JacoAnglesActionServer::actionCallback(const jaco_msgs::ArmJointAnglesGoalC
     jaco_msgs::ArmJointAnglesFeedback feedback;
     jaco_msgs::ArmJointAnglesResult result;
     JacoAngles current_joint_angles;
-    ros::Time current_time = ros::Time::now();
+    ros::Time current_time=ros::Time().now();
 
     try
     {
@@ -124,7 +125,7 @@ void JacoAnglesActionServer::actionCallback(const jaco_msgs::ArmJointAnglesGoalC
             }
 
             arm_comm_.getJointAngles(current_joint_angles);
-            current_time = ros::Time::now();
+            current_time = ros::Time().now();
             feedback.angles = current_joint_angles.constructAnglesMsg();
             action_server_.publishFeedback(feedback);
 

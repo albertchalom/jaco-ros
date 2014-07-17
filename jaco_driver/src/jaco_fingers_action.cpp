@@ -79,7 +79,7 @@ void JacoFingersActionServer::actionCallback(const jaco_msgs::SetFingersPosition
     {
         ROS_WARN("Detected that the third finger command was non-zero even though there "
                  "are only two fingers on the gripper. The goal for the third finger "
-                 "should be set to zero or you make experience delays in action results.");
+                 "should be set to zero or you may experience delays in action results.");
     }
 
     jaco_msgs::SetFingersPositionFeedback feedback;

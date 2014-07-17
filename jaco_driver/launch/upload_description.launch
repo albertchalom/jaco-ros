@@ -1,0 +1,12 @@
+<launch>
+
+  <arg name="use_mico" default="0"/>
+    
+<!--
+<param name="robot_description" command="$(find xacro)/xacro.py '$(find mico_simplified)/urdf/standalone_arm.urdf'" if="$(arg use_mico)"/>
+<param name="robot_description" command="$(find xacro)/xacro.py '$(find jaco_model)/urdf/standalone_arm.urdf'" unless="$(arg use_mico)"/> -->
+    
+    <param name="robot_description" command="cat $(find jaco_model)/urdf/standalone_arm.urdf" if="$(arg use_mico)"/>
+    <param name="robot_description" command="cat $(find jaco_model)/urdf/standalone_arm.urdf" unless="$(arg use_mico)"/>
+
+</launch>

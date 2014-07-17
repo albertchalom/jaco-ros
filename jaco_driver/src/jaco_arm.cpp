@@ -211,20 +211,29 @@ void JacoArm::publishJointAngles(void)
     jaco_angles.joint6 = current_angles.Actuator6;
 
     sensor_msgs::JointState joint_state;
-    const char* nameArgs[] = {"joint_1", "joint_2", "joint_3", "joint_4", "joint_5", "joint_6"};
+    std::string robot_prefix = "jaco_";
+    std::string nameArgs[] = {robot_prefix+"joint_1", robot_prefix+"joint_2", robot_prefix+"joint_3", robot_prefix+"joint_4", robot_prefix+"joint_5", robot_prefix+"joint_6"};
     std::vector<std::string> joint_names(nameArgs, nameArgs + 6);
     joint_state.name = joint_names;
 
     // Transform from Kinova DH algorithm to physical angles in radians, then place into vector array
     joint_state.position.resize(6);
 
+    
     joint_state.position[0] = (180- jaco_angles.joint1) * (PI / 180);
     joint_state.position[1] = (jaco_angles.joint2 - 270) * (PI / 180);
     joint_state.position[2] = (90-jaco_angles.joint3) * (PI / 180);
     joint_state.position[3] = (180-jaco_angles.joint4) * (PI / 180);
     joint_state.position[4] = (180-jaco_angles.joint5) * (PI / 180);
     joint_state.position[5] = (260-jaco_angles.joint6) * (PI / 180);
-
+/*
+    joint_state.position[0] = (jaco_angles.joint1) * (PI / 180);
+    joint_state.position[1] = (jaco_angles.joint2) * (PI / 180);
+    joint_state.position[2] = (jaco_angles.joint3) * (PI / 180);
+    joint_state.position[3] = (jaco_angles.joint4) * (PI / 180);
+    joint_state.position[4] = (jaco_angles.joint5) * (PI / 180);
+    joint_state.position[5] = (jaco_angles.joint6) * (PI / 180);
+*/
     // TODO: Add joint velocity
     // joint_state.velocity.resize(6);
 
@@ -238,7 +247,7 @@ void JacoArm::publishJointAngles(void)
     // joint_state.effort[3] = arm_forces.Actuator4;
     // joint_state.effort[4] = arm_forces.Actuator5;
     // joint_state.effort[5] = arm_forces.Actuator6;
-
+    joint_state.header.stamp = ros::Time().now();
     joint_angles_publisher_.publish(jaco_angles);
     joint_state_publisher_.publish(joint_state);
 }

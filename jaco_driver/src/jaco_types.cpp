@@ -163,12 +163,20 @@ bool JacoPose::isCloseToOther(const JacoPose &other, float tolerance) const
 
 JacoAngles::JacoAngles(const jaco_msgs::JointAngles &angles)
 {
+    /*
     Actuator1 = normalizePositiveInDegrees(180.0 - (angles.joint1 * (180.0 / M_PI)));
     Actuator2 = normalizePositiveInDegrees((angles.joint2 * (180.0 / M_PI)) + 270.0);
     Actuator3 = normalizePositiveInDegrees(90.0 - (angles.joint3 * (180.0 / M_PI)));
     Actuator4 = normalizePositiveInDegrees(180.0 - (angles.joint4 * (180.0 / M_PI)));
     Actuator5 = normalizePositiveInDegrees(180.0 - (angles.joint5 * (180.0 / M_PI)));
-    Actuator6 = normalizePositiveInDegrees(260.0 - (angles.joint6 * (180.0 / M_PI)));
+    Actuator6 = normalizePositiveInDegrees(260.0 - (angles.joint6 * (180.0 / M_PI)));*/
+
+    Actuator1 = normalizePositiveInDegrees((angles.joint1 * (180.0 / M_PI)));
+    Actuator2 = normalizePositiveInDegrees((angles.joint2 * (180.0 / M_PI)));
+    Actuator3 = normalizePositiveInDegrees((angles.joint3 * (180.0 / M_PI)));
+    Actuator4 = normalizePositiveInDegrees((angles.joint4 * (180.0 / M_PI)));
+    Actuator5 = normalizePositiveInDegrees((angles.joint5 * (180.0 / M_PI)));
+    Actuator6 = normalizePositiveInDegrees((angles.joint6 * (180.0 / M_PI)));
 }
 
 
@@ -186,12 +194,20 @@ JacoAngles::JacoAngles(const AngularInfo &angles)
 jaco_msgs::JointAngles JacoAngles::constructAnglesMsg()
 {
     jaco_msgs::JointAngles angles;
+    /*
     angles.joint1 = (180.0 - Actuator1) / (180.0 / M_PI);
     angles.joint2 = (Actuator2 - 270.0) / (180.0 / M_PI);
     angles.joint3 = (90.0 - Actuator3) / (180.0 / M_PI);
     angles.joint4 = (180.0 - Actuator4) / (180.0 / M_PI);
     angles.joint5 = (180.0 - Actuator5) / (180.0 / M_PI);
-    angles.joint6 = (260.0 - Actuator6) / (180.0 / M_PI);
+    angles.joint6 = (260.0 - Actuator6) / (180.0 / M_PI);*/
+
+    angles.joint1 = (Actuator1) / (180.0 / M_PI);
+    angles.joint2 = (Actuator2) / (180.0 / M_PI);
+    angles.joint3 = (Actuator3) / (180.0 / M_PI);
+    angles.joint4 = (Actuator4) / (180.0 / M_PI);
+    angles.joint5 = (Actuator5) / (180.0 / M_PI);
+    angles.joint6 = (Actuator6) / (180.0 / M_PI);
     return angles;
 }
 

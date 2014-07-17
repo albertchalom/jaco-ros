@@ -62,7 +62,7 @@ void JacoKinematics::updateForward(float q1, float q2, float q3, float q4, float
     translation_v.setValue(0, 0, 0);
     transform.setOrigin(translation_v);
 
-    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
+    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time().now(),
                                                     concatTfName(tf_prefix_, "arm_base"),
                                                     concatTfName(tf_prefix_, "base")));
 
@@ -83,7 +83,7 @@ void JacoKinematics::updateForward(float q1, float q2, float q3, float q4, float
     translation_v.setValue(0, 0, base_to_api_);
     transform.setOrigin(translation_v);
 
-    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
+    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time().now(),
                                                     concatTfName(tf_prefix_, "base"),
                                                     concatTfName(tf_prefix_, "api_origin")));
 
@@ -109,7 +109,7 @@ void JacoKinematics::updateForward(float q1, float q2, float q3, float q4, float
     translation_v.setValue(0, 0, base_to_j1_);
     transform.setOrigin(translation_v);
 
-    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
+    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time().now(),
                                                     concatTfName(tf_prefix_, "base"),
                                                     concatTfName(tf_prefix_, "joint_1")));
 
@@ -137,7 +137,7 @@ void JacoKinematics::updateForward(float q1, float q2, float q3, float q4, float
     translation_v.setValue(0, 0 , j1_to_j2_);
     transform.setOrigin(translation_v);
 
-    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
+    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time().now(),
                                                     concatTfName(tf_prefix_, "joint_1"),
                                                     concatTfName(tf_prefix_, "joint_2")));
 
@@ -165,7 +165,7 @@ void JacoKinematics::updateForward(float q1, float q2, float q3, float q4, float
     translation_v.setValue(j2_to_j3_, 0, 0);
     transform.setOrigin(translation_v);
 
-    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
+    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time().now(),
                                                     concatTfName(tf_prefix_, "joint_2"),
                                                     concatTfName(tf_prefix_, "joint_3")));
 
@@ -186,7 +186,7 @@ void JacoKinematics::updateForward(float q1, float q2, float q3, float q4, float
     translation_v.setValue(0, 0, j3_offset_);
     transform.setOrigin(translation_v);
 
-    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
+    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time().now(),
                                                     concatTfName(tf_prefix_, "joint_3"),
                                                     concatTfName(tf_prefix_, "joint_3_offset")));
 
@@ -214,7 +214,7 @@ void JacoKinematics::updateForward(float q1, float q2, float q3, float q4, float
     translation_v.setValue(j3_to_j4_, 0, 0);
     transform.setOrigin(translation_v);
 
-    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
+    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time().now(),
                                                     concatTfName(tf_prefix_, "joint_3_offset"),
                                                     concatTfName(tf_prefix_, "joint_4")));
 
@@ -255,7 +255,7 @@ void JacoKinematics::updateForward(float q1, float q2, float q3, float q4, float
                            -sin(degToRad(-j5_bend_degrees_)) * j4_to_j5_);
     transform.setOrigin(translation_v);
 
-    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
+    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time().now(),
                                                     concatTfName(tf_prefix_, "joint_4"),
                                                     concatTfName(tf_prefix_, "joint_5")));
 
@@ -295,7 +295,7 @@ void JacoKinematics::updateForward(float q1, float q2, float q3, float q4, float
                            -sin(degToRad(j6_bend_degrees_)) * j5_to_j6_);
     transform.setOrigin(translation_v);
 
-    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
+    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time().now(),
                                                     concatTfName(tf_prefix_, "joint_5"),
                                                     concatTfName(tf_prefix_, "joint_6")));
 
@@ -314,7 +314,7 @@ void JacoKinematics::updateForward(float q1, float q2, float q3, float q4, float
     translation_v.setValue(0, 0, -j6_to_end_);
     transform.setOrigin(translation_v);
 
-    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time::now(),
+    broadcaster_.sendTransform(tf::StampedTransform(transform, ros::Time().now(),
                                                     concatTfName(tf_prefix_, "joint_6"),
                                                     concatTfName(tf_prefix_, "end_effector")));
 }
