@@ -1,0 +1,8 @@
+prefix=/home/jaco-ros-dev/jaco_ws/src/jaco-ros/qtcreator-build/devel
+
+Name: jaco_driver
+Description: Description of jaco_driver
+Version: 0.0.1
+Cflags: -I/home/jaco-ros-dev/jaco_ws/src/jaco-ros/qtcreator-build/devel/include -I/home/jaco-ros-dev/jaco_ws/src/jaco-ros/jaco_driver/include
+Libs: -L/home/jaco-ros-dev/jaco_ws/src/jaco-ros/qtcreator-build/devel/lib 
+Requires: actionlib actionlib_msgs geometry_msgs jaco_msgs roscpp rospy sensor_msgs std_msgs tf ecl_geometry

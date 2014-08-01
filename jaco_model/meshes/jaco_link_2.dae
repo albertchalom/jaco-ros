@@ -35288,7 +35288,7 @@
 		<visual_scene	id="Scene0-Visual"	name="Scene0-Visual">
 			<node	id="Actor0-Node" name="Actor0" type="NODE">
         <translate>0.204999968	-0 0</translate>
-        <rotate>1 0	0	 0</rotate>
+        <rotate>0  0	1	 0</rotate>
 			    <instance_geometry url="#ActorShape0_0-Mesh" >
 				 <bind_material>
 				  <technique_common>

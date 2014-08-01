@@ -1,6 +1,6 @@
 <launch>
   <param name="robot_description"
-    command="cat $(find mico_simplified)/urdf/standalone_arm.urdf" />
+    command="cat $(find mico_simplified)/urdf/mico_simplified.URDF" />
 
   <!-- send fake joint values -->
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">

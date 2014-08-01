@@ -8,11 +8,12 @@
 
 namespace jaco{
 
-  JacoArmTrajectoryController::JacoArmTrajectoryController(JacoComm &arm_comm, ros::NodeHandle nh, ros::NodeHandle pnh) :
+  JacoArmTrajectoryController::JacoArmTrajectoryController(JacoComm &arm_comm, ros::NodeHandle nh) :
     arm_comm_(arm_comm),
     node_handle_(nh, "joint_angles"),
     trajectory_server_(nh, "arm_controller", boost::bind(&JacoArmTrajectoryController::execute_trajectory, this, _1), false),
-    gripper_server_(nh, "fingers_controller", boost::bind(&JacoArmTrajectoryController::execute_gripper, this, _1), false)
+    gripper_server_(nh, "fingers_controller", boost::bind(&JacoArmTrajectoryController::execute_gripper, this, _1), false),
+    smooth_joint_trajectory_server(nh, "/setFollowTrajectory", boost::bind(&JacoArmTrajectoryController::execute_joint_trajectory, this, _1), false)
    {
 
     node_handle_.param<int>("num_jaco_finger_joints", num_jaco_finger_joints_, NUM_JACO_FINGER_JOINTS);
@@ -28,13 +29,14 @@ namespace jaco{
 
     for(int joint_id = 0; joint_id < num_jaco_joints_; ++joint_id){
       std::stringstream joint_name_stream;
-      joint_name_stream << "jaco_joint_" << (joint_id+1);
+      joint_name_stream << "mico_joint_" << (joint_id+1);
       std::string joint_name = joint_name_stream.str();
       joint_names.push_back(joint_name);
     }
+
     for(int finger_id = 0; finger_id < num_jaco_finger_joints_; ++finger_id){
       std::stringstream finger_name_stream;
-      finger_name_stream << "jaco_joint_finger_" << (finger_id+1);
+      finger_name_stream << "mico_joint_finger_" << (finger_id+1);
       std::string finger_name = finger_name_stream.str();
       joint_names.push_back(finger_name);
     }
@@ -45,14 +47,34 @@ namespace jaco{
     
     trajectory_server_.start();
     gripper_server_.start();
-    
+    smooth_joint_trajectory_server.start();
   }
 
   JacoArmTrajectoryController::~JacoArmTrajectoryController()
   {
   }
   
-  
+ 
+  static inline double simplify_angle(double angle)
+  {
+    double previous_rev = floor(angle/(2.0*M_PI))*2.0*M_PI;
+    double next_rev = ceil(angle/(2.0*M_PI))*2.0*M_PI;
+    double current_rev;
+    if (fabs(angle - previous_rev) < fabs(angle - next_rev))
+      return angle - previous_rev;
+    return angle - next_rev;
+  }
+
+  float NormalizeAngle(float value)
+  {
+     while (value > 2*M_PI)
+        value -= 2*M_PI;
+     while (value < 0.0)
+        value += 2*M_PI;
+
+     return value;
+  }
+
   static inline double nearest_equivelent(double desired, double current){
     double previous_rev = floor(current / (2*M_PI));
     double next_rev = ceil(current / (2*M_PI));
@@ -186,7 +208,7 @@ namespace jaco{
                       //If the joint name was found, pack the joint position from the trajectory point into a temporary vector in expected order for the jaco
                       if(joint_index >=0 && joint_index < num_jaco_joints_){
                           ROS_INFO("%s: (%d -> %d) = %f", joint_name.c_str(), trajectory_index, joint_index, point.positions[trajectory_index]);
-                          joint_cmd[joint_index] = nearest_equivelent(point.positions[trajectory_index], previous_cmd[joint_index]);
+                          joint_cmd[joint_index] = nearest_equivelent(simplify_angle(point.positions[trajectory_index]), previous_cmd[joint_index]);
                       }
                   }//for
 
@@ -257,7 +279,6 @@ namespace jaco{
                   else if ((current_time - last_nonstall_time_).toSec() > stall_interval_seconds_)
                   {
                       arm_comm_.stopAPI();
-                      arm_comm_.startAPI();
                       trajectory_server_.setPreempted(result);
                       result.error_code = result.GOAL_TOLERANCE_VIOLATED;
                       return;
@@ -266,7 +287,7 @@ namespace jaco{
 
               if(joint_index >=0 && joint_index < num_jaco_joints_){
                   ROS_INFO("%s: (%d -> %d) = %f", joint_name.c_str(), trajectory_index, joint_index, point.positions[trajectory_index]);
-                  joint_cmd[joint_index] = nearest_equivelent(point.positions[trajectory_index], previous_cmd[joint_index]);
+                  joint_cmd[joint_index] = nearest_equivelent(simplify_angle(point.positions[trajectory_index]), previous_cmd[joint_index]);
               }
           }//for
 
@@ -342,6 +363,322 @@ namespace jaco{
 
   }
 
+  jaco_msgs::JointAngles toJacoMsgJointAngles(sensor_msgs::JointState & state, std::vector<std::string> & joint_names)
+  {
+
+
+      int joint_indices[NUM_JACO_JOINTS];
+      //extract joint indices
+      for (unsigned int ji = 0; ji < NUM_JACO_JOINTS; ++ji)
+          joint_indices[ji] = std::distance(state.name.begin(), std::find(state.name.begin(), state.name.end(), joint_names[ji])); // Get the index of that joint name in the internal list
+      jaco_msgs::JointAngles position_data_msg;
+      position_data_msg.joint1 = state.position[joint_indices[0]];
+      position_data_msg.joint2 = state.position[joint_indices[1]];
+      position_data_msg.joint3 = state.position[joint_indices[2]];
+      position_data_msg.joint4 = state.position[joint_indices[3]];
+      position_data_msg.joint5 = state.position[joint_indices[4]];
+      position_data_msg.joint6 = state.position[joint_indices[5]];
+      return position_data_msg;
+  }
+
+  sensor_msgs::JointState toJointState(jaco_msgs::JointAngles & position_data_msg, std::vector<std::string> &  joint_names, const std::vector<std::string> * required_joint_order)
+  {
+    sensor_msgs::JointState state;
+    int joint_indices[NUM_JACO_JOINTS];
+    for (unsigned int ji = 0; ji < NUM_JACO_JOINTS; ++ji)
+    {
+        if (required_joint_order)
+            joint_indices[ji] = std::distance(joint_names.begin(), std::find(joint_names.begin(), joint_names.end(), (*required_joint_order)[ji])); // Get the index of that joint name in the internal list
+        else
+            joint_indices[ji] = ji;
+    }
+
+    state.name = joint_names;
+    state.position.resize(6,0);
+    state.position[joint_indices[0]] = position_data_msg.joint1;
+    state.position[joint_indices[1]] = position_data_msg.joint2;
+    state.position[joint_indices[2]] = position_data_msg.joint3;
+    state.position[joint_indices[3]] = position_data_msg.joint4;
+    state.position[joint_indices[4]] = position_data_msg.joint5;
+    state.position[joint_indices[5]] = position_data_msg.joint6;
+    return state;
+  }
+  sensor_msgs::JointState toNormalizedJointState(jaco_msgs::JointAngles & position_data_msg, std::vector<std::string> &  joint_names, const std::vector<std::string> * required_joint_order)
+  {
+    sensor_msgs::JointState state;
+    int joint_indices[NUM_JACO_JOINTS];
+    for (unsigned int ji = 0; ji < NUM_JACO_JOINTS; ++ji)
+    {
+        if (required_joint_order)
+            joint_indices[ji] = std::distance(joint_names.begin(), std::find(joint_names.begin(), joint_names.end(), (*required_joint_order)[ji])); // Get the index of that joint name in the internal list
+        else
+            joint_indices[ji] = ji;
+    }
+
+    state.name = joint_names;
+    state.position.resize(6,0);
+    state.position[joint_indices[0]] = NormalizeAngle(position_data_msg.joint1);
+    state.position[joint_indices[1]] = position_data_msg.joint2;
+    state.position[joint_indices[2]] = position_data_msg.joint3;
+    state.position[joint_indices[3]] = NormalizeAngle(position_data_msg.joint4);
+    state.position[joint_indices[4]] = NormalizeAngle(position_data_msg.joint5);
+    state.position[joint_indices[5]] = NormalizeAngle(position_data_msg.joint6);
+    return state;
+  }
+
+
+  sensor_msgs::JointState getError (sensor_msgs::JointState desired_joint_state, sensor_msgs::JointState current_joint_state)
+  {
+      sensor_msgs::JointState error;
+      error.position.resize(6,0);
+      for (unsigned int i=0; i<NUM_JACO_JOINTS; i++)
+      {
+          error.position[i] = nearest_equivelent(simplify_angle(desired_joint_state.position[i]), current_joint_state.position[i]) - current_joint_state.position[i];
+      }
+      return error;
+
+  }
+
+  bool isCloseEnough(sensor_msgs::JointState desired_joint_state, sensor_msgs::JointState current_joint_state, double threshold)
+  {
+      sensor_msgs::JointState error=getError(desired_joint_state, current_joint_state);
+      double total_error=0;
+      for(unsigned int i=0; i<NUM_JACO_JOINTS; i++)
+      {
+          total_error+=fabs(error.position[i]);
+      }
+      return total_error<threshold;
+  }
+
+
+  sensor_msgs::JointState toJointState(JacoAngles & position_data, std::vector<std::string> & joint_names, const std::vector<std::string> * required_joint_order)
+  {
+      jaco_msgs::JointAngles angleMsg = position_data.constructAnglesMsg();
+      return toJointState(angleMsg, joint_names, required_joint_order);
+
+  }
+  sensor_msgs::JointState toNormalizedJointState(JacoAngles & position_data, std::vector<std::string> & joint_names, const std::vector<std::string> * required_joint_order)
+  {
+      jaco_msgs::JointAngles angleMsg = position_data.constructAnglesMsg();
+      return toNormalizedJointState(angleMsg, joint_names, required_joint_order);
+
+  }
+
+
+  JacoAngles toJacoAngles(sensor_msgs::JointState & state, std::vector<std::string> & joint_names)
+  {
+      jaco_msgs::JointAngles position_data_msg = toJacoMsgJointAngles(state, joint_names);
+      return JacoAngles(position_data_msg);
+  }
+
+  JacoAngles toJacoVelocities(sensor_msgs::JointState & state, std::vector<std::string> & joint_names)
+    {
+
+      JacoAngles offsetAngles;
+
+      offsetAngles.Actuator1 = -state.position[0];
+      offsetAngles.Actuator2 = state.position[1];
+      offsetAngles.Actuator3 = -state.position[2];
+      offsetAngles.Actuator4 = -state.position[3];
+      offsetAngles.Actuator5 = -state.position[4];
+      offsetAngles.Actuator6 = -state.position[5];
+      return offsetAngles;
+    }
+  /*RosPosition*/
+  //make error.position
+
+  void JacoArmTrajectoryController::execute_joint_trajectory(const control_msgs::FollowJointTrajectoryGoalConstPtr &goal)
+  {
+      sensor_msgs::JointState current_joint_state;
+      sensor_msgs::JointState desired_joint_state;
+      JacoAngles position_data;
+      desired_joint_state.name = goal->trajectory.joint_names;
+      desired_joint_state.position.resize(6,0);
+
+      desired_joint_state.position = goal->trajectory.points[0].positions ;
+      arm_comm_.getJointAngles(position_data);
+      current_joint_state = toJointState(position_data,joint_names, &goal->trajectory.joint_names);
+      for(unsigned int i=0; i<NUM_JACO_JOINTS; i++)
+      {
+          desired_joint_state.position[i]=nearest_equivelent(desired_joint_state.position[i], current_joint_state.position[i]);
+      }
+      if(!isCloseEnough(desired_joint_state, current_joint_state, .03))
+      {
+          control_msgs::FollowJointTrajectoryResult result;
+          result.error_code = control_msgs::FollowJointTrajectoryResult::PATH_TOLERANCE_VIOLATED;
+          smooth_joint_trajectory_server.setAborted(result);
+          if(!arm_comm_.isStopped())
+            arm_comm_.stopAPI();
+          ROS_ERROR_STREAM("Initial arm state not valid.");
+          return;
+      }
+
+
+      float trajectoryPoints[NUM_JACO_JOINTS][goal->trajectory.points.size()];
+      int numPoints = goal->trajectory.points.size();
+      //get trajectory data
+      for (unsigned int i = 0; i < numPoints; i ++)
+      {
+        for (unsigned int j = 0; j < NUM_JACO_JOINTS; j ++)
+        {
+          trajectoryPoints[j][i] = goal->trajectory.points.at(i).positions.at(j);
+        }
+      }
+
+      //initialize arrays needed to fit a smooth trajectory to the given points
+      ecl::Array<double> timePoints(numPoints);
+      timePoints[0] = 0.0;
+      std::vector< ecl::Array<double> > jointPoints;
+      jointPoints.resize(NUM_JACO_JOINTS);
+      float prevPoint[NUM_JACO_JOINTS];
+
+      //Assign initial point in trajectory
+      for (unsigned int i = 0; i < NUM_JACO_JOINTS; i ++)
+      {
+        jointPoints[i].resize(numPoints);
+        jointPoints[i][0] = trajectoryPoints[i][0];
+        prevPoint[i] = trajectoryPoints[i][0];
+      }
+
+
+      //determine time component of trajectories for each joint
+      for (unsigned int i = 1; i < numPoints; i ++)
+      {
+        float maxTime = 0.0;
+
+        //First iterate through all of the joint positions and find the one with the largest
+        //change relative to it's allowed maximum velocity. The first three joints have a lower
+        //maximum velocity than the last three. Scale the time taken by the motion so that the
+        //velocity limits of all the joints are respected.
+        //
+        for (unsigned int j = 0; j < NUM_JACO_JOINTS; j ++)
+        {
+          //calculate approximate time required to move to the next position
+          float time = fabs(trajectoryPoints[j][i] - prevPoint[j]);
+          if (j <= 2)
+            time /= LARGE_ACTUATOR_VELOCITY;
+          else
+            time /= SMALL_ACTUATOR_VELOCITY;
+
+          if (time > maxTime)
+            maxTime = time;
+
+          jointPoints[j][i] = trajectoryPoints[j][i];
+          prevPoint[j] = trajectoryPoints[j][i];
+        }
+
+        timePoints[i] = timePoints[i-1] + maxTime*TIME_SCALING_FACTOR;
+      }
+
+      double max_curvature = 6.0;  //NOTE: this may need adjustment depending on the source of the trajectory points; this value seems to work fine for trajectories generated by MoveIt!.
+      std::vector<ecl::SmoothLinearSpline> splines;
+      splines.resize(6);
+      for (unsigned int i = 0; i < NUM_JACO_JOINTS; i ++)
+      {
+        ecl::SmoothLinearSpline tempSpline(timePoints, jointPoints[i], max_curvature);
+        splines.at(i) = tempSpline;
+      }
+    
+    //control loop
+    bool trajectoryComplete = false;
+    double startTime = ros::Time::now().toSec();
+    double t = 0;
+    sensor_msgs::JointState error;
+    error.name = goal->trajectory.joint_names;
+    error.position.resize(NUM_JACO_JOINTS,0);
+
+    sensor_msgs::JointState prevError;
+    prevError.name = goal->trajectory.joint_names;
+    prevError.position.resize(NUM_JACO_JOINTS,0);
+    double current_joint_pos[NUM_JACO_JOINTS];
+    AngularInfo angular_velocities;
+    TrajectoryPoint trajPoint;
+    trajPoint.InitStruct();
+    trajPoint.Position.Type = ANGULAR_VELOCITY;
+    trajPoint.Position.HandMode = HAND_NOMOVEMENT;
+
+    sensor_msgs::JointState command;
+    command.position.resize(6,0);
+    command.name = error.name;   
+    while (!trajectoryComplete)
+    {
+      //check for preempt requests from clients
+      if (smooth_joint_trajectory_server.isPreemptRequested() || !ros::ok())
+      {
+
+        //preempt action server
+        smooth_joint_trajectory_server.setPreempted();
+        ROS_INFO("Joint trajectory server preempted by client");
+        
+        return;
+      }
+      if(arm_comm_.isStopped())
+          arm_comm_.startAPI();
+
+      arm_comm_.getJointAngles(position_data);
+      current_joint_state = toJointState(position_data,joint_names, &goal->trajectory.joint_names);
+
+    
+      //get time for trajectory
+      t = std::min(ros::Time::now().toSec() - startTime, timePoints.at(timePoints.size() - 1));
+
+      for (int i = 0; i < NUM_JACO_JOINTS; ++i)
+          desired_joint_state.position[i] = nearest_equivelent(splines.at(i)(t), current_joint_state.position[i]);
+      if (t == timePoints.at(timePoints.size() - 1) && isCloseEnough(desired_joint_state, current_joint_state, .03))
+        {
+
+          arm_comm_.stopAPI();
+          trajectoryComplete = true;
+          ROS_INFO("Trajectory complete!");
+          break;
+        }
+      error = getError(desired_joint_state, current_joint_state);
+      //Otherwise, populate the current command
+      for(int i=0; i< NUM_JACO_JOINTS; i++)
+        {
+            command.position[i] = KP*error.position[i] +KV*(error.position[i]-prevError.position[i])*RAD_TO_DEG;
+        }
+
+      angular_velocities = toJacoVelocities(command, joint_names);
+
+
+        //send the velocity command
+        if(fabs(angular_velocities.Actuator1)>50  || fabs(angular_velocities.Actuator2)>50 || fabs(angular_velocities.Actuator3)>50 || fabs(angular_velocities.Actuator4)>50 || fabs(angular_velocities.Actuator5)>50 || fabs(angular_velocities.Actuator6)>50)
+        {
+            ROS_ERROR("Angular velocity exceeds predefined velocity threshold.");
+            ROS_ERROR_STREAM("1: " <<angular_velocities.Actuator1 << " 2: "
+                                     << angular_velocities.Actuator2 << " 3: "
+                                     << angular_velocities.Actuator3 << " 4: "
+                                     << angular_velocities.Actuator4 <<" 5: "
+                                     << angular_velocities.Actuator5 <<" 6: "
+                                     << angular_velocities.Actuator6);
+           // control_msgs::FollowJointTrajectoryResult result;
+           // result.error_code = control_msgs::FollowJointTrajectoryResult::GOAL_TOLERANCE_VIOLATED;
+          //  arm_comm_.stopAPI();
+         //   smooth_joint_trajectory_server.setAborted(result);
+          //  return;
+        }
+        else{
+            ROS_INFO_STREAM("1: " <<angular_velocities.Actuator1 << " 2: "
+                                     << angular_velocities.Actuator2 << " 3: "
+                                     << angular_velocities.Actuator3 << " 4: "
+                                     << angular_velocities.Actuator4 <<" 5: "
+                                     << angular_velocities.Actuator5 <<" 6: "
+                                     << angular_velocities.Actuator6);
+        }
+        //if(!arm_comm_.isStopped())
+        //    arm_comm_.stopAPI();
+        arm_comm_.setJointVelocities(angular_velocities);
+       prevError = error;
+
+    }
+    
+    control_msgs::FollowJointTrajectoryResult result;
+    result.error_code = control_msgs::FollowJointTrajectoryResult::SUCCESSFUL;
+    smooth_joint_trajectory_server.setSucceeded(result);
+  }
+
+
   void JacoArmTrajectoryController::execute_gripper(const control_msgs::GripperCommandGoalConstPtr &goal){} /*
       {
           //took out recursive mutex
@@ -401,7 +738,7 @@ namespace jaco{
           boost::recursive_mutex::scoped_lock lock(api_mutex);
           EraseAllTrajectories();
           StopControlAPI();
-          StartControlAPI();
+          StartControlAPI();4:223.89
           SetAngularControl();
 
           //update_joint_states();

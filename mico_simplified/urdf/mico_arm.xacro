@@ -90,7 +90,7 @@ xmlns:xacro="http://ros.org/wiki/xacro">
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://mico_simplified/meshes/${link_name}.dae"/>
+        <mesh filename="package://mico_simplified/meshes/${link_name}_collision.dae"/>
       </geometry>
     </collision>
   </link>

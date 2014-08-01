@@ -11,7 +11,7 @@
 #include "jaco_driver/jaco_pose_action.h"
 #include "jaco_driver/jaco_angles_action.h"
 #include "jaco_driver/jaco_fingers_action.h"
-
+#include "jaco_driver/jaco_arm_trajectory_controller.h"
 
 int main(int argc, char **argv)
 {
@@ -29,8 +29,9 @@ int main(int argc, char **argv)
             jaco::JacoPoseActionServer pose_server(comm, nh);
             jaco::JacoAnglesActionServer angles_server(comm, nh);
             jaco::JacoFingersActionServer fingers_server(comm, nh);
+            jaco::JacoArmTrajectoryController trajectory_controller(comm, nh);
 
-            ros::spin();
+                ros::spin();
         }
         catch(const std::exception& e)
         {

@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/jaco-ros-dev/jaco_ws/src/jaco-ros/qtcreator-build/devel/setup.sh

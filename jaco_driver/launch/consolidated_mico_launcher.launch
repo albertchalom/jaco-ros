@@ -1,0 +1,22 @@
+<launch>
+  <node name="jaco_arm_driver" pkg="jaco_driver" type="jaco_arm_driver" output="screen" cwd="node">
+    <param name="serial_number" value="" />
+    <param name="robot_prefix" value="mico_"/>
+  </node>
+   
+  <node name="jaco_tf_updater" pkg="jaco_driver" type="jaco_tf_updater" output="screen" cwd="node">
+    <param name="tf_prefix" value="mico_" />
+    <remap from="/jaco_tf_updater/in/joint_angles" to="/jaco_arm_driver/out/joint_angles"/>
+  </node>
+    <rosparam param="robot_description_planning/default_robot_padding">
+      .01
+    </rosparam>
+  <arg name="use_mico" default="1"/>
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(find jaco_model)/urdf/standalone_mico_arm.xacro'" />
+
+  <include file="$(find mico_moveit_config)/launch/mico_moveit.launch"/>
+
+  <node name="robot_state_pub" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+    <remap from="/joint_states" to="/jaco_arm_driver/out/joint_state"/>
+  </node>
+</launch>

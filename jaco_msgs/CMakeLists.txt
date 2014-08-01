@@ -17,6 +17,7 @@ add_message_files(
   FingerPosition.msg
   JointAngles.msg
   JointVelocity.msg
+  JacoFingerVel.msg
 )
 
 add_service_files(
@@ -24,6 +25,9 @@ add_service_files(
   Start.srv
   Stop.srv
   HomeArm.srv
+  EulerToQuaternion.srv
+  JacoFK.srv
+  QuaternionToEuler.srv
 )
 
 add_action_files(DIRECTORY action
@@ -31,6 +35,7 @@ add_action_files(DIRECTORY action
   ArmJointAngles.action
   ArmPose.action
   SetFingersPosition.action
+  ExecuteGrasp.action
 )
 
 generate_messages(
