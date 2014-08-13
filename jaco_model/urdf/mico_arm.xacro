@@ -81,7 +81,7 @@
   <property name="joint_5_origin_rpy" value="0 ${J_PI/180*55} 0" />  -->
   <property name="joint_5_axis_xyz" value="0 0 -1" />
   <property name="joint_5_origin_xyz" value="0.040276 0 -0.062261" />
-  <property name="joint_5_origin_rpy" value="0 -${J_PI/180*55} 0" />
+  <property name="joint_5_origin_rpy" value="0 -${J_PI/180*60} 0" />
   <property name="joint_5_lower_limit" value="-${J_LIM}" />
   <property name="joint_5_upper_limit" value="${J_LIM}" />
 
@@ -91,7 +91,7 @@
   <property name="joint_6_origin_rpy" value="0 ${J_PI/180*55} -${4*J_PI/9}" /> -->
   <property name="joint_6_axis_xyz" value="0 0 -1" />
   <property name="joint_6_origin_xyz" value="0.040276 0 -0.062261" />
-  <property name="joint_6_origin_rpy" value="-${J_PI/180*55} 0 ${J_PI/2}" />
+  <property name="joint_6_origin_rpy" value="-${J_PI/180*60} 0 ${J_PI/2}" />
   <property name="joint_6_lower_limit" value="-${J_LIM}" />
   <property name="joint_6_upper_limit" value="${J_LIM}" />
 
