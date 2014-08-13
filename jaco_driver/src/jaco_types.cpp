@@ -168,7 +168,7 @@ JacoAngles::JacoAngles(const jaco_msgs::JointAngles &angles)
     Actuator3 = normalizePositiveInDegrees(90.0 - (angles.joint3 * (180.0 / M_PI)));
     Actuator4 = normalizePositiveInDegrees(180.0 - (angles.joint4 * (180.0 / M_PI)));
     Actuator5 = normalizePositiveInDegrees(180.0 - (angles.joint5 * (180.0 / M_PI)));
-    Actuator6 = normalizePositiveInDegrees(260.0 - (angles.joint6 * (180.0 / M_PI)));
+    Actuator6 = normalizePositiveInDegrees(270.0 - (angles.joint6 * (180.0 / M_PI)));
 }
 
 
@@ -191,7 +191,7 @@ jaco_msgs::JointAngles JacoAngles::constructAnglesMsg()
     angles.joint3 = (90.0 - Actuator3) / (180.0 / M_PI);
     angles.joint4 = (180.0 - Actuator4) / (180.0 / M_PI);
     angles.joint5 = (180.0 - Actuator5) / (180.0 / M_PI);
-    angles.joint6 = (260.0 - Actuator6) / (180.0 / M_PI);
+    angles.joint6 = (270.0 - Actuator6) / (180.0 / M_PI);
     return angles;
 }
 
