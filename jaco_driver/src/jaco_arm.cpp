@@ -245,7 +245,7 @@ void JacoArm::publishJointAngles(void)
     joint_state.position[2] = (90-jaco_angles.joint3) * (PI / 180);
     joint_state.position[3] = Normalize((180-jaco_angles.joint4) * (PI / 180));
     joint_state.position[4] = Normalize((180-jaco_angles.joint5) * (PI / 180));
-    joint_state.position[5] = Normalize((260-jaco_angles.joint6) * (PI / 180));
+    joint_state.position[5] = Normalize((270-jaco_angles.joint6) * (PI / 180));
 /*
     joint_state.position[0] = (jaco_angles.joint1) * (PI / 180);
     joint_state.position[1] = (jaco_angles.joint2) * (PI / 180);
