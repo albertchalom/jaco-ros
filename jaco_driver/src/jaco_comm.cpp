@@ -570,10 +570,6 @@ void JacoComm::getFingerPositions(FingerAngles &fingers)
         throw JacoCommException("Could not get Cartesian finger position", result);
     }
 
-    if (num_fingers_ == 2)
-    {
-        jaco_cartesian_position.Fingers.Finger3 = 0.0;
-    }
 
     fingers = FingerAngles(jaco_cartesian_position.Fingers);
 }
@@ -682,8 +678,8 @@ void JacoComm::printPosition(const JacoPose &position)
  */
 void JacoComm::printFingers(const FingersPosition &fingers)
 {
-    ROS_INFO("Finger positions -- F1: %f, F2: %f, F3: %f",
-             fingers.Finger1, fingers.Finger2, fingers.Finger3);
+    ROS_INFO("Finger positions -- F1: %f, F2: %f",
+             fingers.Finger1, fingers.Finger2);
 }
 
 
