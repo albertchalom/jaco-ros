@@ -10,21 +10,21 @@ namespace jaco{
 
   JacoArmTrajectoryController::JacoArmTrajectoryController(JacoComm &arm_comm, ros::NodeHandle nh) :
     arm_comm_(arm_comm),
-    node_handle_(nh, "joint_angles"),
-    trajectory_server_(nh, "arm_controller", boost::bind(&JacoArmTrajectoryController::execute_trajectory, this, _1), false),
-    gripper_server_(nh, "fingers_controller", boost::bind(&JacoArmTrajectoryController::execute_gripper, this, _1), false),
-    smooth_joint_trajectory_server(nh, "/setFollowTrajectory", boost::bind(&JacoArmTrajectoryController::execute_joint_trajectory, this, _1), false)
-   {
+      node_handle_(nh, "joint_angles"),
+      trajectory_server_(nh, "arm_controller", boost::bind(&JacoArmTrajectoryController::execute_trajectory, this, _1), false),
+      gripper_server_(nh, "fingers_controller", boost::bind(&JacoArmTrajectoryController::execute_gripper, this, _1), false),
+      smooth_joint_trajectory_server(nh, "/setFollowTrajectory", boost::bind(&JacoArmTrajectoryController::execute_joint_trajectory, this, _1), false)
+     {
 
-    node_handle_.param<int>("num_jaco_finger_joints", num_jaco_finger_joints_, NUM_JACO_FINGER_JOINTS);
-    node_handle_.param<int>("num_jaco_joints", num_jaco_joints_, NUM_JACO_JOINTS);
-    node_handle_.param<double>("stall_interval_seconds", stall_interval_seconds_, 0.5);
-    node_handle_.param<double>("stall_threshold", stall_threshold_, 1.0);
-    node_handle_.param<double>("rate_hz", rate_hz_, 10.0);
+      node_handle_.param<int>("num_jaco_finger_joints", num_jaco_finger_joints_, NUM_JACO_FINGER_JOINTS);
+      node_handle_.param<int>("num_jaco_joints", num_jaco_joints_, NUM_JACO_JOINTS);
+      node_handle_.param<double>("stall_interval_seconds", stall_interval_seconds_, 0.5);
+      node_handle_.param<double>("stall_threshold", stall_threshold_, 1.0);
+      node_handle_.param<double>("rate_hz", rate_hz_, 10.0);
 
-    double tolerance;
-    node_handle_.param<double>("tolerance", tolerance, 2.0);
-    tolerance_ = (float)tolerance;
+      double tolerance;
+      node_handle_.param<double>("tolerance", tolerance, 2.0);
+      tolerance_ = (float)tolerance;
     num_joints_ = num_jaco_joints_ + num_jaco_finger_joints_;
 
     for(int joint_id = 0; joint_id < num_jaco_joints_; ++joint_id){
@@ -113,6 +113,7 @@ namespace jaco{
 
   void JacoArmTrajectoryController::execute_trajectory(const control_msgs::FollowJointTrajectoryGoalConstPtr &goal)
   {
+      ROS_INFO("In execute trajectory");
       control_msgs::FollowJointTrajectoryFeedback feedback;
       control_msgs::FollowJointTrajectoryResult result;
       control_msgs::FollowJointTrajectoryActionFeedback action_feedback;
@@ -489,6 +490,7 @@ namespace jaco{
 
   void JacoArmTrajectoryController::execute_joint_trajectory(const control_msgs::FollowJointTrajectoryGoalConstPtr &goal)
   {
+      ROS_INFO("in execute_joint_trajectory");
       sensor_msgs::JointState current_joint_state;
       sensor_msgs::JointState desired_joint_state;
       JacoAngles position_data;
@@ -497,7 +499,7 @@ namespace jaco{
 
       desired_joint_state.position = goal->trajectory.points[0].positions ;
       arm_comm_.getJointAngles(position_data);
-      current_joint_state = toJointState(position_data,joint_names, &goal->trajectory.joint_names);
+      current_joint_state = toNormalizedJointState(position_data,joint_names, &goal->trajectory.joint_names);
       for(unsigned int i=0; i<NUM_JACO_JOINTS; i++)
       {
           desired_joint_state.position[i]=nearest_equivelent(desired_joint_state.position[i], current_joint_state.position[i]);
@@ -578,7 +580,7 @@ namespace jaco{
         ecl::SmoothLinearSpline tempSpline(timePoints, jointPoints[i], max_curvature);
         splines.at(i) = tempSpline;
       }
-    
+
     //control loop
     bool trajectoryComplete = false;
     double startTime = ros::Time::now().toSec();
@@ -626,8 +628,8 @@ namespace jaco{
           desired_joint_state.position[i] = nearest_equivelent(splines.at(i)(t), current_joint_state.position[i]);
       if (t == timePoints.at(timePoints.size() - 1) && isCloseEnough(desired_joint_state, current_joint_state, .03))
         {
-
           arm_comm_.stopAPI();
+          arm_comm_.startAPI();
           trajectoryComplete = true;
           ROS_INFO("Trajectory complete!");
           break;
@@ -679,114 +681,27 @@ namespace jaco{
   }
 
 
-  void JacoArmTrajectoryController::execute_gripper(const control_msgs::GripperCommandGoalConstPtr &goal){} /*
-      {
-          //took out recursive mutex
-          EraseAllTrajectories();
-          StopControlAPI();
-          StartControlAPI();
-          SetAngularControl();
-
-          //took out update_joint_states()
-
-          AngularInfo angles;
-          FingersPosition fingers;
-          angles.Actuator= joint_pos[0];
-          angles.Actuator2 = joint_pos[1];
-          angles.Actuator3 = joint_pos[2];
-          angles.Actuator4 = joint_pos[3];
-          angles.Actuator5 = joint_pos[4];
-          angles.Actuator6 = joint_pos[5];
-          fingers.Finger1 = goal->command.position;
-          fingers.Finger2 = goal->command.position;
-          fingers.Finger3 = goal->command.position;  //Do we want finger 3??
-
-          TrajectoryPoint jaco_point;
-          memset(&jaco_point, 0, sizeof(jaco_point));
-
-          jaco_point.LimitationsActive =false;
-          jaco_point.Position.Delay = 0.0;
-          jaco_point.Position.Type = ANGULAR_POSITION;
-          jaco_point.Position.Actuators = angles;
-          jaco_point.Position.HandMode = POSITION_MODE;
-          jaco_point.Position.Fingers = fingers;
-          SendBasicTrajectory(jaco_point);
-      }
-
-      ros::Rate rate(10);  //this is ROS
-      int trajetory_size;
-      bool execution_succeeded=true;
-
-
-      if(execution_succeeded)
-      {
-          update_joint_states();
-          control_msgs::GripperCommand result;
-          result.position = joint_pos[6];
-          result.position = joint_eff[6];
-          result.stalled = false;
-          result.reached_goal =true;
-          gripper_server_.setSucceeded(result);
-      }
-
-
-  }
-
-  /*
-  void JacoArmTrajectoryController::execute_gripper(const control_msgs::GripperCommandGoalConstPtr &goal){
-      {
-          boost::recursive_mutex::scoped_lock lock(api_mutex);
-          EraseAllTrajectories();
-          StopControlAPI();
-          StartControlAPI();4:223.89
-          SetAngularControl();
-
-          //update_joint_states();
-
-          AngularInfo angles;
-          FingersPosition fingers;
-          angles.Actuator1 = joint_pos[0];
-          angles.Actuator2 = joint_pos[1];
-          angles.Actuator3 = joint_pos[2];
-          angles.Actuator4 = joint_pos[3];
-          angles.Actuator5 = joint_pos[4];
-          angles.Actuator6 = joint_pos[5];
-          fingers.Finger1 = goal->command.position;
-          fingers.Finger2 = goal->command.position;
-          fingers.Finger3 = goal->command.position;
-
-          TrajectoryPoint jaco_point;
-          memset(&jaco_point, 0, sizeof(jaco_point));
-
-          jaco_point.LimitationsActive = false;
-          jaco_point.Position.Delay = 0.0;
-          jaco_point.Position.Type = ANGULAR_POSITION;
-          jaco_point.Position.Actuators = angles;
-          jaco_point.Position.HandMode = POSITION_MODE;
-          jaco_point.Position.Fingers = fingers;
-          SendBasicTrajectory(jaco_point);
-      }
-
-      ros::Rate rate(10);
-      int trajectory_size;
-      while(trajectory_size > 0){
-          {
-              boost::recursive_mutex::scoped_lock lock(api_mutex);
-
-              TrajectoryFIFO Trajectory_Info;
-              memset(&Trajectory_Info, 0, sizeof(Trajectory_Info));
-              GetGlobalTrajectoryInfo(Trajectory_Info);
-              trajectory_size = Trajectory_Info.TrajectoryCount;
-          }
-          rate.sleep();
-      }
-
-      //update_joint_states();
+  void JacoArmTrajectoryController::execute_gripper(const control_msgs::GripperCommandGoalConstPtr &goal)
+  {
+      ROS_INFO("Made it to execute gripper");
+      arm_comm_.stopAPI();
+      arm_comm_.startAPI();
+      FingersPosition fingers;
+      fingers.Finger1 = goal->command.position;
+      fingers.Finger2 = 0;
+      fingers.Finger3 = 0;
+      FingerAngles finger_angles = FingerAngles(fingers);
+      char str[50];
+      sprintf(str, "finger1: %f; finger2: %f; finger3: %f\n", finger_angles.Finger1, finger_angles.Finger2, finger_angles.Finger3);
+      ROS_INFO(str);
+      arm_comm_.setFingerPositions(finger_angles);
       control_msgs::GripperCommandResult result;
-      result.position = joint_pos[6];
-      result.position = joint_eff[6];
+      result.position = 0;//joint_eff[5];
       result.stalled = false;
       result.reached_goal = true;
+      ROS_INFO("Succeeded");
       gripper_server_.setSucceeded(result);
-  }*/
+      ROS_INFO("Sent succeeded");
+  }
+
 }
