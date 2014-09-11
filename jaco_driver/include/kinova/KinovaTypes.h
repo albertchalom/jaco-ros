@@ -522,10 +522,10 @@ struct FingersPosition
 	 */
 	float Finger2;
 
-	/**
-	 * @brief This is the value of the finger #3. The units will depends on the context it's been used.
-	 */
-	float Finger3;
+    /**
+     * @brief This is the value of the finger #3. The units will depends on the context it's been used.
+     */
+    float Finger3;
 
 	/**
 	 * This method will initialises all the values to 0
@@ -534,8 +534,8 @@ struct FingersPosition
 	{
 		Finger1       = 0.0f;
 		Finger2       = 0.0f;
-		Finger3       = 0.0f;
-	}
+        Finger3       = 0.0f;
+    }
 };
 
 /** Coordinates holds the cartesian parts
